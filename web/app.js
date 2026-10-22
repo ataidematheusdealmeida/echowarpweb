@@ -87,6 +87,7 @@ let scanResults = [];
 let editingServerId = "";
 let currentAudioLevel = 0;
 let meterAnimationId;
+const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
 let recordingBusy = false;
 let replayingHistory = false;
 const autoBuffer = document.getElementById("autoBuffer");
@@ -161,6 +162,7 @@ async function api(path, options = {}) {
 
 function setPlayerSource() {
   replayingHistory = false;
+  resetPlaybackSpeed();
   hasPlayed = false;
   stablePlaybackSince = 0;
   if (hls) {
@@ -249,7 +251,7 @@ function animateMeter() {
   const bars = document.querySelectorAll(".meter span");
   const base = currentAudioLevel;
   bars.forEach((bar, index) => {
-    const wave = 0.72 + (Math.sin(Date.now() / 170 + index * 0.9) + 1) * 0.14;
+    const wave = reducedMotion?.matches ? 0.86 : 0.72 + (Math.sin(Date.now() / 170 + index * 0.9) + 1) * 0.14;
     const floor = 0.08 + (index % 3) * 0.025;
     const scale = Math.max(floor, Math.min(1, base * wave * (1 + index * 0.035)));
     bar.style.transform = `scaleY(${scale})`;
@@ -740,14 +742,41 @@ document.getElementById("disconnectButton").addEventListener("click", async (eve
   }
 });
 
-document.querySelectorAll(".tab").forEach((button) => {
+const tabs = Array.from(document.querySelectorAll(".tab"));
+tabs.forEach((button, index) => {
+  const panel = document.querySelector(`[data-panel="${button.dataset.tab}"]`);
+  const selected = button.classList.contains("is-active");
+  button.id = `tab-${button.dataset.tab}`;
+  button.setAttribute("role", "tab");
+  button.setAttribute("aria-controls", `panel-${button.dataset.tab}`);
+  button.setAttribute("aria-selected", String(selected));
+  button.tabIndex = selected ? 0 : -1;
+  panel.id = `panel-${button.dataset.tab}`;
+  panel.setAttribute("role", "tabpanel");
+  panel.setAttribute("aria-labelledby", button.id);
+  panel.tabIndex = 0;
   button.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach((item) => item.classList.remove("is-active"));
+    tabs.forEach((item) => {
+      item.classList.remove("is-active");
+      item.setAttribute("aria-selected", "false");
+      item.tabIndex = -1;
+    });
     document.querySelectorAll(".tab-panel").forEach((item) => item.classList.remove("is-active"));
     button.classList.add("is-active");
+    button.setAttribute("aria-selected", "true");
+    button.tabIndex = 0;
     document.querySelector(`[data-panel="${button.dataset.tab}"]`).classList.add("is-active");
     configForm.dataset.activeTab = button.dataset.tab;
     if (button.dataset.tab === "logs") loadLogs();
+  });
+  button.addEventListener("keydown", (event) => {
+    const next = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1
+      : event.key === "ArrowRight" ? (index + 1) % tabs.length
+      : event.key === "ArrowLeft" ? (index + tabs.length - 1) % tabs.length : null;
+    if (next === null) return;
+    event.preventDefault();
+    tabs[next].focus();
+    tabs[next].click();
   });
 });
 

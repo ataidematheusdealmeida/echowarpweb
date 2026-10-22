@@ -11,6 +11,14 @@ const elements = new Map([...fs.readFileSync('web/index.html', 'utf8').matchAll(
   click() { return this.emit('click'); },
 } ]));
 const player = elements.get('player');
+const tabs = ['servers', 'audio', 'advanced', 'playback', 'recordings', 'logs'].map((name, index) => ({
+  ...elements.get('playButton'), dataset: { tab: name }, attrs: {}, events: {},
+  classList: { contains: () => index === 0, add() {}, remove() {} },
+  focus() { this.focused = true; },
+}));
+const panels = new Map(tabs.map(tab => [tab.dataset.tab, {
+  ...elements.get('playButton'), attrs: {}, events: {},
+}]));
 Object.assign(player, {
   paused: true, ended: false, muted: false, volume: 1, currentTime: 0, currentSrc: 'stream', readyState: 4,
   seekable: { length: 1, start: () => 100, end: () => 1900 },
@@ -24,7 +32,10 @@ class Hls {
   loadSource() {} attachMedia() {} destroy() {}
 }
 const context = vm.createContext({
-  document: { getElementById(id) { assert(elements.has(id), `Missing ${id}`); return elements.get(id); }, querySelectorAll: () => [], body: { classList: { add() {}, remove() {} } } },
+  document: { getElementById(id) { assert(elements.has(id), `Missing ${id}`); return elements.get(id); },
+    querySelectorAll: selector => selector === '.tab' ? tabs : selector === '.tab-panel' ? [...panels.values()] : [],
+    querySelector: selector => panels.get(selector.match(/data-panel="([^"]+)"/)[1]),
+    body: { classList: { add() {}, remove() {} } } },
   window: { Hls, localStorage: { getItem: () => null, setItem() {} }, requestAnimationFrame: () => 1, addEventListener() {} },
   performance: { now: () => 20000 }, setInterval() {}, setTimeout() {},
   fetch: async () => ({ ok: true, status: 200, json: async () => ({ state: 'connected', config: {}, files: [], servers: [], output: [] }) }),
@@ -32,6 +43,14 @@ const context = vm.createContext({
 (async () => {
   vm.runInContext(fs.readFileSync('web/app.js', 'utf8'), context);
   await new Promise(resolve => setImmediate(resolve));
+  assert.equal(tabs[0].attrs['aria-selected'], 'true');
+  assert.equal(tabs[1].tabIndex, -1);
+  assert.equal(panels.get('audio').attrs['aria-labelledby'], 'tab-audio');
+  tabs[0].events.keydown[0]({ key: 'ArrowRight', preventDefault() {} });
+  assert(tabs[1].focused);
+  assert.equal(tabs[1].attrs['aria-selected'], 'true');
+  assert.equal(tabs[0].attrs['aria-selected'], 'false');
+  assert.equal(elements.get('configForm').dataset.activeTab, 'audio');
   await elements.get('playButton').click();
   assert(!player.paused);
   assert.equal(elements.get('playButton').attrs['aria-label'], 'Pausar');
@@ -72,6 +91,11 @@ const context = vm.createContext({
   await elements.get('playerVolume').emit('input');
   assert(!player.muted);
   assert.equal(player.volume, 0.35);
+  speed.value = '3';
+  await speed.emit('change');
+  await elements.get('reloadButton').click();
+  assert.equal(player.playbackRate, 1);
+  assert.equal(speed.value, '1');
   vm.runInContext('connectionState = "auth_error"', context);
   await elements.get('goLiveButton').click();
   assert.notEqual(elements.get('liveLabel').textContent, 'AO VIVO');

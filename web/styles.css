@@ -269,7 +269,7 @@ audio {
 }
 
 button {
-  min-height: 2.65rem;
+  min-height: 2.75rem;
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--text);
@@ -850,7 +850,7 @@ input[type="checkbox"] {
   .server-add-controls button,
   .server-row button {
     width: 100%;
-    min-height: 2.65rem;
+    min-height: 2.75rem;
   }
 
   .console {
@@ -945,16 +945,16 @@ button:disabled { cursor: not-allowed; }
 .media-position { color: #ddd; font-size: 0.75rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .media-controls .media-live { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; margin: 0; border: 1px solid #484b50; border-radius: 7px; padding: 0.5rem 0.65rem; background: #ffffff08; color: #d2d2d5; font-size: 0.68rem; font-weight: 750; white-space: nowrap; min-height: 2.35rem; letter-spacing: 0.03em; }
 .live-dot { width: 0.45rem; height: 0.45rem; border-radius: 50%; background: #8c8c91; flex-shrink: 0; }
-.media-controls .media-live[data-state="live"] { background: #d91e32; border-color: #f13c4e; color: #fff; box-shadow: 0 2px 10px #d91e3225; }
-.media-live[data-state="live"] .live-dot { background: #fff; }
+.media-controls .media-live[data-state="live"] { background: var(--accent); border-color: var(--accent-strong); color: #071412; box-shadow: 0 2px 10px #35c6a425; }
+.media-live[data-state="live"] .live-dot { background: #071412; }
 .media-controls .media-live:not(:disabled):hover { border-color: #ddd; }
-.media-controls .media-live[data-state="live"]:hover { background: #ef263b; border-color: #ef263b; }
+.media-controls .media-live[data-state="live"]:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
 .media-footer { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; padding: 0.55rem 0.15rem 0; border-top: 1px solid #ffffff0b; margin-top: 0.4rem; }
 .media-controls .media-caption { color: #929398; font-size: 0.7rem; line-height: 1.5; text-align: right; margin: 0; }
-.media-controls #historySeek { appearance: none; -webkit-appearance: none; min-height: 0; height: 4px; margin: 0.45rem 0 1rem; border-radius: 5px; background: linear-gradient(to right, #ed3345 0%, #ed3345 var(--played, 0%), #53565a var(--played, 0%), #53565a 100%); cursor: pointer; }
+.media-controls #historySeek { appearance: none; -webkit-appearance: none; min-height: 0; height: 4px; margin: 0.45rem 0 1rem; border-radius: 5px; background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--played, 0%), #53565a var(--played, 0%), #53565a 100%); cursor: pointer; }
 .media-controls #historySeek:disabled { opacity: 0.4; cursor: default; }
-.media-timeline::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #ed3345; box-shadow: 0 0 0 3px #ed334518; }
-.media-timeline::-moz-range-thumb { width: 12px; height: 12px; border: 0; border-radius: 50%; background: #ed3345; }
+.media-timeline::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px #35c6a418; }
+.media-timeline::-moz-range-thumb { width: 12px; height: 12px; border: 0; border-radius: 50%; background: var(--accent); }
 .player-secondary-actions { margin-top: 0.85rem; }
 @media (max-width: 420px) {
  .media-controls { padding: 0.8rem 0.65rem 0.65rem; }
@@ -965,3 +965,14 @@ button:disabled { cursor: not-allowed; }
  .media-controls .media-live { font-size: 0.62rem; padding: 0.5rem; }
 }
 .media-controls .media-speed { width: auto; min-width: 4.5rem; min-height: 44px; padding: 0.4rem; flex-shrink: 0; }
+
+.setup-guide { margin-bottom: 1rem; padding: 0.85rem 1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-soft); }
+.setup-guide summary { min-height: 2.75rem; align-content: center; color: var(--accent-strong); cursor: pointer; font-weight: 650; }
+.setup-guide ol { padding-left: 1.3rem; margin: 0.75rem 0; }
+.setup-guide li, .setup-guide p { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+.setup-guide li + li { margin-top: 0.65rem; }
+.setup-guide strong { color: var(--text); }
+.media-controls:focus-visible, [role="tabpanel"]:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

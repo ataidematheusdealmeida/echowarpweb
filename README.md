@@ -1,8 +1,39 @@
 # EchoWarp Web
 
-Roda o EchoWarp 0.9.2 em Docker e publica o audio recebido em uma pagina web para celular.
+![EchoWarp Web: computador com EchoWarp instalado envia áudio ao EchoWarp Web em Docker, que disponibiliza a reprodução no celular ou navegador.](docs/assets/echowarp-web-banner.png)
 
-Fluxo:
+Ouça o áudio do seu computador pelo navegador do celular ou de outro dispositivo.
+O EchoWarp Web recebe a transmissão de um servidor EchoWarp e oferece um painel
+com reprodução ao vivo, histórico de 30 minutos, velocidades de 1x a 3x e gravações.
+
+> **Antes de começar:** é necessário instalar e executar o **EchoWarp na máquina
+> que fornece o áudio**. O painel web depende dessa transmissão para receber som.
+> No celular, basta abrir o navegador; não é necessário instalar o EchoWarp.
+
+## Como as peças se conectam
+
+```text
+Computador de origem           Servidor Linux                  Celular / PC
+EchoWarp instalado e ativo  →  EchoWarp Web em Docker       →  Navegador
+Captura o áudio               Recebe e publica a transmissão   Reproduz o áudio
+```
+
+| Onde | O que precisa estar instalado | O que fazer |
+| --- | --- | --- |
+| Máquina que fornece o áudio | [EchoWarp](https://github.com/lHumaNl/EchoWarp) | Iniciar no modo servidor e selecionar o dispositivo de captura ou loopback. Manter a máquina ligada e o EchoWarp em execução. |
+| Máquina que hospeda o painel | Linux, Docker e Docker Compose | Executar este projeto. A imagem já inclui o cliente EchoWarp 0.9.2, PulseAudio e FFmpeg. |
+| Celular ou computador que vai ouvir | Navegador compatível com HLS ou HLS.js | Abrir o endereço do painel, fazer login e tocar o áudio. |
+
+O computador de origem e o servidor Docker podem ser a mesma máquina Linux,
+desde que ela também execute o EchoWarp no modo servidor e tenha a captura
+configurada. Se forem máquinas diferentes, o servidor Docker precisa alcançar
+o IP e a porta do EchoWarp na origem. O navegador precisa alcançar o painel web.
+
+**São duas senhas independentes:** a senha do painel (`WEB_AUTH_PASSWORD`) permite
+entrar no site; a senha do EchoWarp deve coincidir com a configurada no servidor
+de origem e é informada ao cadastrar a conexão no painel.
+
+Fluxo interno do container:
 
 ```text
 EchoWarp server -> EchoWarp client no container -> PulseAudio virtual -> FFmpeg HLS -> navegador
@@ -14,7 +45,28 @@ O web UI tambem controla o EchoWarp: scan de servidores LAN, conexao manual, sen
 
 - Docker com Docker Compose em Linux.
 - Celular e servidor Docker na mesma rede.
-- Um EchoWarp server ativo na maquina que tem o audio de origem.
+- EchoWarp instalado e executando no modo servidor na máquina que tem o áudio de origem.
+- Dispositivo de captura correto na origem: para transmitir o som do sistema no Windows, use um dispositivo de loopback.
+
+### Preparar a máquina de origem (Windows)
+
+1. Baixe e extraia o [EchoWarp](https://github.com/lHumaNl/EchoWarp/releases) na máquina cujo áudio deseja ouvir.
+2. Abra o PowerShell na pasta do executável e liste os dispositivos:
+
+   ```powershell
+   .\EchoWarp.exe devices
+   ```
+
+3. Identifique o dispositivo de captura ou loopback e inicie o servidor. Substitua `1` pelo ID encontrado e escolha sua senha:
+
+   ```powershell
+   .\EchoWarp.exe server --no-interactive --device 1 --port 4415 --password minhaSenha --max-clients 1
+   ```
+
+4. Mantenha esse processo aberto e anote o IP da máquina. No painel web, cadastre esse IP, a porta `4415` e a mesma senha.
+
+Se o servidor EchoWarp estiver parado, a máquina estiver desligada ou o dispositivo
+selecionado não estiver capturando som, o painel não receberá áudio da origem.
 
 O compose usa `network_mode: host` para permitir mDNS/discovery e expor a pagina na porta escolhida.
 
