@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#101214" />
+    <title>EchoWarp Web</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="mark" aria-hidden="true"></span>
+          <div>
+            <h1>EchoWarp Web</h1>
+            <p id="subtitle">Aguardando audio</p>
+          </div>
+        </div>
+        <div class="quick-status">
+          <span id="state">iniciando</span>
+          <span id="origin">-</span>
+          <button id="logoutButton" class="small" type="button">Sair</button>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <section class="panel player-panel" aria-label="Player">
+          <div class="meter" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+          </div>
+
+          <audio id="player" playsinline preload="none" hidden></audio>
+          <div id="mediaControls" class="media-controls" role="group" aria-label="Player de áudio" tabindex="0">
+            <input id="historySeek" class="media-timeline" aria-label="Posição na transmissão" type="range" min="0" max="0" step="0.5" value="0" disabled />
+            <div class="media-toolbar">
+              <button id="playButton" class="media-icon" type="button" data-paused="true" aria-label="Reproduzir" title="Reproduzir (K)"><svg id="playIcon" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path class="play-shape" d="M7 4v16l14-8Z" fill="currentColor"/><path class="pause-shape" d="M6 4h4v16H6zm8 0h4v16h-4z" fill="currentColor"/></svg></button>
+              <div class="media-volume">
+                <button id="muteButton" class="media-icon" type="button" aria-label="Silenciar" aria-pressed="false" title="Silenciar (M)">
+                  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor"/><path d="M16 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14" fill="none" stroke="currentColor" stroke-width="1.5"/><path class="mute-slash" d="M3 3l18 18" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                </button>
+                <input id="playerVolume" aria-label="Volume" type="range" min="0" max="100" value="100" />
+                <span id="volumeValue" class="media-volume-value">100%</span>
+              </div>
+              <select id="playbackSpeed" class="media-speed" aria-label="Velocidade de reprodução" title="Velocidade de reprodução do histórico">
+                <option value="1">1x</option>
+                <option value="1.5">1.5x</option>
+                <option value="2">2x</option>
+                <option value="3">3x</option>
+              </select>
+              <button id="goLiveButton" class="media-live" type="button" data-state="waiting" title="Voltar ao vivo"><span class="live-dot" aria-hidden="true"></span><span id="liveLabel">AGUARDANDO</span></button>
+            </div>
+            <div class="media-footer"><span id="playbackPosition" class="media-position">0:00</span><p id="historyState" class="media-caption">Preparando histórico</p></div>
+          </div>
+
+          <div class="actions player-secondary-actions">
+            <button id="reloadButton" type="button">Recarregar</button>
+            <button id="disconnectButton" class="danger" type="button">Desconectar</button>
+          </div>
+
+
+
+          <details class="player-section"><summary>Detalhes da conex&atilde;o</summary><dl class="status-grid">
+            <div>
+              <dt>Stream</dt>
+              <dd id="stream">/hls/live.m3u8</dd>
+            </div>
+            <div>
+              <dt>Audio</dt>
+              <dd id="audioLevel">sem sinal</dd>
+            </div>
+            <div>
+              <dt>Processo</dt>
+              <dd id="processState">-</dd>
+            </div>
+          </dl></details>
+        </section>
+
+        <section class="panel config-panel" aria-label="EchoWarp">
+          <div class="tabs" role="tablist" aria-label="EchoWarp">
+            <button class="tab is-active" type="button" data-tab="servers">Servidores</button>
+            <button class="tab" type="button" data-tab="audio">Audio</button>
+            <button class="tab" type="button" data-tab="advanced">Tecnico</button>
+            <button class="tab" type="button" data-tab="playback">Reprodu&ccedil;&atilde;o</button>
+            <button class="tab" type="button" data-tab="recordings">Grava&ccedil;&otilde;es</button>
+            <button class="tab" type="button" data-tab="logs">Logs</button>
+          </div>
+
+          <form id="configForm" data-active-tab="servers">
+<section class="tab-panel" data-panel="playback"><h2>Reprodu&ccedil;&atilde;o</h2>
+          <details class="player-section">
+            <summary>Estabilidade e buffer</summary>
+            <label class="checkbox-label"><input id="autoBuffer" type="checkbox" checked /> Buffer automatico</label>
+            <label>Buffer manual (segundos)
+              <input id="bufferSeconds" type="number" min="1" max="10" step="0.5" value="2" />
+            </label>
+            <p id="bufferState" aria-live="polite"></p>
+            <p>Mais buffer reduz cortes e aumenta o atraso. Prefer&ecirc;ncia salva neste navegador.</p>
+          </details>
+
+<section class="player-section"><h2>Salvar hist&oacute;rico</h2><p>Escolha quantos minutos anteriores deseja salvar.</p>            <div class="inline-controls">
+            <label>&Uacute;ltimos minutos
+              <input id="historyMinutes" type="number" min="1" max="30" value="30" />
+            </label>
+            <button id="saveHistoryButton" type="button">Salvar trecho</button>
+            </div>
+            <p id="historySaveState" aria-live="polite"></p>
+          </section></section>          <section id="recordingsPanel" class="tab-panel" data-panel="recordings">
+            <h2>Grava&ccedil;&otilde;es salvas</h2>
+            <p class="helper-text">Grave a partir de agora ou salve um trecho na aba Reprodu&ccedil;&atilde;o.</p>
+            <div class="actions">
+              <button id="recordButton" type="button">Iniciar grava&ccedil;&atilde;o</button>
+              <button id="stopRecordButton" type="button" disabled>Parar grava&ccedil;&atilde;o</button>
+            </div>
+            <p id="recordingState" aria-live="polite">Sem gravacao ativa</p>
+            <details class="retention-settings"><summary>Reten&ccedil;&atilde;o dos arquivos</summary>
+            <div class="inline-controls"><label>Manter por (horas)
+              <input id="recordingRetention" type="number" min="1" max="87600" step="1" value="168" />
+            </label>
+            <button id="saveRetentionButton" type="button">Salvar per&iacute;odo</button></div>
+            <p>Arquivos antigos sao excluidos automaticamente. Padr&atilde;o: 168 horas (7 dias).</p></details>
+            <div id="recordingsList" class="server-list"></div>
+          </section>
+
+
+            <section class="tab-panel is-active" data-panel="servers">
+              <div class="section-toolbar">
+                <button id="openServerDialogButton" class="primary" type="button">Novo servidor</button>
+                <button id="scanButton" type="button">Scanear rede</button>
+                <span id="scanState" class="inline-state">parado</span>
+              </div>
+
+              <div class="list-heading">Servidores salvos</div>
+              <div id="savedServerList" class="server-list saved-list" aria-live="polite"></div>
+
+              <div id="scanResultsSection" class="scan-results" hidden>
+                <div class="list-heading">Encontrados na rede</div>
+                <div id="serverList" class="server-list" aria-live="polite"></div>
+              </div>
+            </section>
+
+            <section class="tab-panel" data-panel="audio">
+              <label class="volume-control wide">
+                Volume do player
+                <span class="range-row">
+                  <input id="settingsVolume" type="range" min="0" max="100" value="100" />
+                  <span id="settingsVolumeValue">100%</span>
+                </span>
+              </label>
+
+              <div class="field-grid compact-grid">
+                <label>
+                  Saida
+                  <select id="outputDevice"></select>
+                </label>
+                <label>
+                  Selecao
+                  <select id="deviceMode" name="device_mode">
+                    <option value="name">Nome</option>
+                    <option value="id">ID</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="scan-row">
+                <button id="devicesButton" type="button">Atualizar saidas</button>
+                <span id="devicesState" class="inline-state">-</span>
+              </div>
+
+              <details class="details-panel">
+                <summary>Dispositivos avancados</summary>
+                <div class="field-grid">
+                  <label>
+                    Device ID
+                    <input id="deviceId" name="device_id" inputmode="numeric" />
+                  </label>
+                  <label>
+                    Device nome
+                    <input id="deviceName" name="device_name" />
+                  </label>
+                  <label>
+                    Sample rate
+                    <input id="sampleRate" name="sample_rate" type="number" min="8000" step="1000" />
+                  </label>
+                  <label>
+                    Channels
+                    <input id="channels" name="channels" type="number" min="1" max="8" />
+                  </label>
+                  <label>
+                    Buffer frames
+                    <input id="audioBufferFrames" name="audio_buffer_frames" type="number" min="1" max="100" />
+                  </label>
+                </div>
+
+                <div class="toggle-grid">
+                  <label><input id="virtualMic" type="checkbox" /> Microfone virtual</label>
+                  <label><input id="loopback" type="checkbox" /> Loopback</label>
+                  <label><input id="aec" type="checkbox" /> AEC</label>
+                </div>
+
+                <label class="full-field">
+                  Capture devices
+                  <textarea id="captureDevices" rows="2" spellcheck="false"></textarea>
+                </label>
+                <label class="full-field">
+                  Playback devices
+                  <textarea id="playbackDevices" rows="2" spellcheck="false"></textarea>
+                </label>
+
+                <pre id="devicesRaw" class="console"></pre>
+              </details>
+            </section>
+
+            <section class="tab-panel" data-panel="advanced">
+              <div class="field-grid">
+                <label>
+                  Papel
+                  <select id="role" name="role">
+                    <option value="client">Client</option>
+                    <option value="server">Server</option>
+                  </select>
+                </label>
+                <label>
+                  Modo server
+                  <select id="serverMode" name="server_mode">
+                    <option value="normal">Normal</option>
+                    <option value="reverse">Reverse</option>
+                    <option value="duplex">Duplex</option>
+                    <option value="conference">Conference</option>
+                  </select>
+                </label>
+                <label>
+                  Server nome
+                  <input id="serverName" name="server_name" />
+                </label>
+                <label>
+                  Log
+                  <select id="logLevel" name="log_level">
+                    <option value="debug">debug</option>
+                    <option value="info">info</option>
+                    <option value="warn">warn</option>
+                    <option value="error">error</option>
+                  </select>
+                </label>
+                <label>
+                  Max clients
+                  <input id="maxClients" name="max_clients" type="number" min="1" max="64" />
+                </label>
+                <label>
+                  Max reconnect
+                  <input id="maxReconnect" name="max_reconnect" type="number" min="0" />
+                </label>
+                <label>
+                  Restart delay
+                  <input id="restartDelay" name="restart_delay" type="number" min="1" />
+                </label>
+                <label>
+                  EW reconnect tries
+                  <input id="autoReconnectAttempts" name="auto_reconnect_attempts" type="number" min="0" />
+                </label>
+                <label>
+                  Rate limit
+                  <input id="rateLimit" name="rate_limit" type="number" min="0" />
+                </label>
+                <label>
+                  Max auth falhas
+                  <input id="maxAuthFailures" name="max_auth_failures" type="number" min="0" />
+                </label>
+                <label>
+                  Record
+                  <select id="record" name="record">
+                    <option value="">Nenhum</option>
+                    <option value="mix">mix</option>
+                    <option value="tracks">tracks</option>
+                    <option value="both">both</option>
+                  </select>
+                </label>
+                <label>
+                  TLS cert
+                  <input id="tlsCert" name="tls_cert" />
+                </label>
+                <label>
+                  TLS key
+                  <input id="tlsKey" name="tls_key" />
+                </label>
+                <label>
+                  Ban file
+                  <input id="banFile" name="ban_file" />
+                </label>
+                <label>
+                  Record dir
+                  <input id="recordDir" name="record_dir" />
+                </label>
+              </div>
+
+              <div class="toggle-grid">
+                <label><input id="enabled" type="checkbox" /> Ativo</label>
+                <label><input id="discover" type="checkbox" /> Discover</label>
+                <label><input id="tlsInsecure" type="checkbox" /> TLS inseguro</label>
+                <label><input id="autoRestart" type="checkbox" /> Auto restart</label>
+                <label><input id="autoReconnect" type="checkbox" /> Auto reconnect EW</label>
+                <label><input id="serverDiscovery" type="checkbox" /> Publicar server</label>
+                <label><input id="hwidRequired" type="checkbox" /> HWID required</label>
+                <label><input id="serverMuted" type="checkbox" /> Server muted</label>
+              </div>
+
+              <label class="full-field">
+                STUN
+                <textarea id="stunServers" rows="3"></textarea>
+              </label>
+              <label class="full-field">
+                Args extras
+                <textarea id="extraArgs" rows="3" spellcheck="false"></textarea>
+              </label>
+
+              <div class="scan-row">
+                <button id="doctorButton" type="button">Doctor</button>
+                <button id="clearPasswordButton" type="button">Limpar senha salva</button>
+                <span id="doctorState" class="inline-state">-</span>
+              </div>
+
+              <pre id="doctorOutput" class="console"></pre>
+            </section>
+
+            <section class="tab-panel" data-panel="logs">
+              <pre id="logsOutput" class="console tall"></pre>
+            </section>
+
+            <footer class="form-actions">
+              <button id="saveButton" class="primary" type="submit">Salvar ajustes</button>
+              <button id="restartButton" type="button">Restart</button>
+              <button id="stopButton" class="danger" type="button">Stop</button>
+            </footer>
+          </form>
+        </section>
+      </section>
+
+      <dialog id="serverDialog" class="server-dialog" aria-labelledby="serverDialogTitle">
+        <div class="dialog-panel">
+          <div class="dialog-header">
+            <h2 id="serverDialogTitle">Novo servidor</h2>
+            <button id="closeServerDialogButton" class="small" type="button">Fechar</button>
+          </div>
+
+          <div class="field-grid">
+            <label>
+              Nome do servidor
+              <input id="serverPresetName" name="server_preset_name" autocomplete="off" maxlength="80" />
+            </label>
+            <label>
+              Servidor
+              <input id="address" name="address" autocomplete="off" inputmode="url" />
+            </label>
+            <label>
+              Porta
+              <input id="port" name="port" type="number" min="1" max="65535" />
+            </label>
+            <label>
+              Senha
+              <input id="password" name="password" type="password" autocomplete="new-password" />
+            </label>
+            <label>
+              Apelido
+              <input id="nickname" name="nickname" maxlength="20" />
+            </label>
+            <label>
+              Timeout scan
+              <input id="discoverTimeout" name="discover_timeout" placeholder="3s" />
+            </label>
+          </div>
+
+          <div class="toggle-grid single-row">
+            <label><input id="serverTlsInsecure" type="checkbox" /> TLS inseguro</label>
+          </div>
+
+          <div class="dialog-actions">
+            <button id="addServerButton" class="primary" type="button">Salvar servidor</button>
+            <button id="cancelServerDialogButton" type="button">Cancelar</button>
+          </div>
+        </div>
+      </dialog>
+    </main>
+
+    <script src="/vendor/hls.min.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>

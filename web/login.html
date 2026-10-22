@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101214" />
+    <title>Entrar - EchoWarp Web</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="login-body">
+    <main class="login-shell">
+      <form id="loginForm" class="login-card" method="post" action="/login" autocomplete="on">
+        <div class="brand login-brand">
+          <span class="mark" aria-hidden="true"></span>
+          <div>
+            <h1>EchoWarp Web</h1>
+            <p>Entrada protegida</p>
+          </div>
+        </div>
+
+        <input id="next" name="next" type="hidden" value="/" />
+
+        <label for="loginUsername">
+          Usuario
+          <input id="loginUsername" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" autofocus required />
+        </label>
+        <label for="loginPassword">
+          Senha
+          <input id="loginPassword" name="password" type="password" autocomplete="current-password" required />
+        </label>
+
+        <p id="loginError" class="login-error" hidden>Usuario ou senha invalido.</p>
+        <label class="checkbox-label">
+          <input name="remember" type="checkbox" value="1" /> Manter conectado por 30 dias
+        </label>
+        <button class="primary" type="submit">Entrar</button>
+      </form>
+    </main>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get("next");
+      if (next && next.startsWith("/") && !next.startsWith("//")) {
+        document.getElementById("next").value = next;
+      }
+      if (params.get("error")) {
+        document.getElementById("loginError").hidden = false;
+      }
+    </script>
+  </body>
+</html>

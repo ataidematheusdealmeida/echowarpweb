@@ -1,0 +1,4 @@
+.env
+hls/
+*.log
+__pycache__/
