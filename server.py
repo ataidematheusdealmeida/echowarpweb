@@ -106,7 +106,7 @@ def parse_cookie_header(header):
 
 
 def safe_next_url(value):
-    if value and value.startswith("/") and not value.startswith("//"):
+    if value and value.startswith("/") and not value.startswith("//") and "\\" not in value and not any(ord(char) < 32 or ord(char) == 127 for char in value):
         return value
     return "/"
 
@@ -1579,7 +1579,7 @@ class EchoWarpHandler(BaseHTTPRequestHandler):
     def check_credentials(self, username, password):
         expected_user = auth_user()
         expected_password = os.environ.get("WEB_AUTH_PASSWORD", DEFAULT_AUTH_PASSWORD)
-        return hmac.compare_digest(username, expected_user) and hmac.compare_digest(password, expected_password)
+        return hmac.compare_digest(username.encode("utf-8"), expected_user.encode("utf-8")) and hmac.compare_digest(password.encode("utf-8"), expected_password.encode("utf-8"))
 
     def handle_login(self, path, parsed):
         payload = self.read_json(default={}) if path == "/api/login" else self.read_form()
@@ -1659,7 +1659,7 @@ class EchoWarpHandler(BaseHTTPRequestHandler):
         relative = path.lstrip("/")
         file_path = (WEB_ROOT / relative).resolve()
         root = WEB_ROOT.resolve()
-        if not str(file_path).startswith(str(root)):
+        if not file_path.is_relative_to(root):
             self.send_error(403)
             return
         if not file_path.exists() or file_path.is_dir():
@@ -1737,8 +1737,7 @@ def main():
     httpd = EchoWarpHTTPServer((host, port), EchoWarpHandler, controller)
 
     def shutdown(_signum, _frame):
-        controller.stop()
-        httpd.shutdown()
+        threading.Thread(target=httpd.shutdown, daemon=True).start()
 
     signal.signal(signal.SIGTERM, shutdown)
     signal.signal(signal.SIGINT, shutdown)
@@ -1753,6 +1752,7 @@ def main():
         httpd.serve_forever()
     finally:
         controller.stop()
+        httpd.server_close()
 
 
 if __name__ == "__main__":

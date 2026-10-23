@@ -99,5 +99,13 @@ const context = vm.createContext({
   vm.runInContext('connectionState = "auth_error"', context);
   await elements.get('goLiveButton').click();
   assert.notEqual(elements.get('liveLabel').textContent, 'AO VIVO');
+  const originalFetch = context.fetch;
+  context.fetch = async () => { throw new Error('Servidor indisponível'); };
+  // Supply the field values a browser initializes as strings.
+  for (const element of elements.values()) element.value = String(element.value);
+  await elements.get('configForm').events.submit[0]({ preventDefault() {} });
+  assert.match(elements.get('subtitle').textContent, /Não foi possível salvar: Servidor indisponível/);
+  assert.equal(elements.get('saveButton').disabled, false);
+  context.fetch = originalFetch;
   console.log('Player: initialization, play/pause, history, go-live, volume/mute and offline state OK');
 })().catch(error => { console.error(error); process.exitCode = 1; });

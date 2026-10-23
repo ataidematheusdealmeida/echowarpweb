@@ -9,6 +9,53 @@ from unittest.mock import Mock, patch
 import server
 
 
+class WebBoundaryTests(unittest.TestCase):
+    def test_login_redirect_stays_on_this_host(self):
+        for value in ("https://example.org", "//example.org", "/\\example.org", "/\r/example.org", "/\n/example.org", "/\t/example.org", "/\x00path", "/\x7fpath", ""):
+            with self.subTest(value=value):
+                self.assertEqual(server.safe_next_url(value), "/")
+        self.assertEqual(server.safe_next_url("/player?view=history#controls"), "/player?view=history#controls")
+
+    def test_credentials_accept_utf8_without_server_error(self):
+        handler = object.__new__(server.EchoWarpHandler)
+        with patch.dict(os.environ, {"WEB_AUTH_USER": "usuário", "WEB_AUTH_PASSWORD": "áudio-seguro"}):
+            self.assertTrue(handler.check_credentials("usuário", "áudio-seguro"))
+            self.assertFalse(handler.check_credentials("usuário", "inválida"))
+            self.assertFalse(handler.check_credentials("outro", "áudio-seguro"))
+
+    def test_static_files_reject_resolved_sibling_directory(self):
+        handler = object.__new__(server.EchoWarpHandler)
+        handler.send_error = Mock()
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder) / "web"
+            outside = Path(folder) / "web-private" / "secret.txt"
+            # Simulate a symlink resolution without requiring Windows symlink privileges.
+            with patch.object(server, "WEB_ROOT", root), patch.object(Path, "resolve", side_effect=[outside, root]):
+                handler.serve_static("/linked/secret.txt")
+        handler.send_error.assert_called_once_with(403)
+
+    def test_signal_shutdown_runs_outside_serving_thread(self):
+        callbacks = {}
+        shutdown_called = threading.Event()
+        shutdown_threads = []
+        controller = Mock()
+        controller.status = {"state": "starting"}
+        httpd = Mock()
+
+        def shutdown():
+            shutdown_threads.append(threading.get_ident())
+            shutdown_called.set()
+
+        httpd.shutdown.side_effect = shutdown
+        httpd.serve_forever.side_effect = lambda: callbacks[server.signal.SIGTERM](None, None)
+        with patch.object(server, "EchoWarpController", return_value=controller), patch.object(server, "EchoWarpHTTPServer", return_value=httpd), patch.object(server.signal, "signal", side_effect=lambda sig, fn: callbacks.__setitem__(sig, fn)), patch("builtins.print"):
+            server.main()
+            self.assertTrue(shutdown_called.wait(2))
+        self.assertNotEqual(shutdown_threads[0], threading.get_ident())
+        controller.stop.assert_called_once()
+        httpd.server_close.assert_called_once()
+
+
 class PersistentSessionTests(unittest.TestCase):
     def test_restart_logout_expiry_and_credential_change(self):
         with tempfile.TemporaryDirectory() as folder, patch.object(server, "SESSIONS_FILE", Path(folder) / "sessions.sqlite3"):

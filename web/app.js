@@ -371,6 +371,8 @@ async function saveConfig() {
     fillConfig(data.config);
     loadServers().catch(() => {});
     subtitle.textContent = "Configuracao aplicada";
+  } catch (error) {
+    subtitle.textContent = `Não foi possível salvar: ${error.message}`;
   } finally {
     button.disabled = false;
   }
