@@ -10,6 +10,12 @@ import server
 
 
 class WebBoundaryTests(unittest.TestCase):
+    def test_startup_requires_explicit_password(self):
+        for password in ("", "CHANGE_ME_BEFORE_START"):
+            with patch.dict(os.environ, {"WEB_AUTH_PASSWORD": password}):
+                with self.assertRaises(ValueError):
+                    server.main()
+
     def test_login_redirect_stays_on_this_host(self):
         for value in ("https://example.org", "//example.org", "/\\example.org", "/\r/example.org", "/\n/example.org", "/\t/example.org", "/\x00path", "/\x7fpath", ""):
             with self.subTest(value=value):
@@ -49,7 +55,8 @@ class WebBoundaryTests(unittest.TestCase):
         httpd.shutdown.side_effect = shutdown
         httpd.serve_forever.side_effect = lambda: callbacks[server.signal.SIGTERM](None, None)
         with patch.object(server, "EchoWarpController", return_value=controller), patch.object(server, "EchoWarpHTTPServer", return_value=httpd), patch.object(server.signal, "signal", side_effect=lambda sig, fn: callbacks.__setitem__(sig, fn)), patch("builtins.print"):
-            server.main()
+            with patch.dict(os.environ, {"WEB_AUTH_PASSWORD": "test-only-password"}):
+                server.main()
             self.assertTrue(shutdown_called.wait(2))
         self.assertNotEqual(shutdown_threads[0], threading.get_ident())
         controller.stop.assert_called_once()

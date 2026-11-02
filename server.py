@@ -42,7 +42,7 @@ ECHOWARP_BIN = os.environ.get("ECHOWARP_BIN", "/opt/echowarp/EchoWarp")
 ECHOWARP_CLIENT_LOG = Path("/home/echowarp/.config/echowarp/logs/client.log")
 AUTH_COOKIE = "echowarp_session"
 DEFAULT_AUTH_USER = "admin@example.com"
-DEFAULT_AUTH_PASSWORD = "CHANGE_ME_BEFORE_START"
+DEFAULT_AUTH_PASSWORD = ""
 
 
 def pcm_level(raw):
@@ -1726,6 +1726,8 @@ class EchoWarpHTTPServer(ThreadingHTTPServer):
 
 
 def main():
+    if os.environ.get("WEB_AUTH_PASSWORD", "") in ("", "CHANGE_ME_BEFORE_START"):
+        raise ValueError("Configure WEB_AUTH_PASSWORD before starting the server.")
     mimetypes.add_type("application/vnd.apple.mpegurl", ".m3u8")
     mimetypes.add_type("video/mp2t", ".ts")
 

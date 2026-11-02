@@ -109,7 +109,7 @@ Abra no celular:
 http://IP_DO_DOCKER:3008
 ```
 
-A tela de login fica ativa por padrao. O usuario padrao e `admin@example.com`; altere `WEB_AUTH_USER` e `WEB_AUTH_PASSWORD` no `.env` se precisar trocar.
+Defina uma senha exclusiva em `WEB_AUTH_PASSWORD` antes de iniciar; o servidor recusa senha vazia ou o marcador de exemplo. A tela de login fica ativa por padrao. O usuario padrao e `admin@example.com`; altere `WEB_AUTH_USER` e `WEB_AUTH_PASSWORD` no `.env` se precisar trocar.
 
 Para expor somente no Tailscale, descubra o IP Tailscale do host com `tailscale ip -4` e defina:
 
